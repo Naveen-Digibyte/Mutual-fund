@@ -27,6 +27,12 @@ public class AssetManagementCompany {
     @Column(name = "mf_001_amcName")
     private String name;
 
+    @Column(name = "mf_001_amcValueNo")
+    private int value;
+
+    @Column(name = "mf_001_amcStatus")
+    private boolean status;
+
     @OneToMany(mappedBy = "assetManagementCompany", cascade = CascadeType.ALL)
     @JsonManagedReference
     private List<AMCFund> amcFunds;
