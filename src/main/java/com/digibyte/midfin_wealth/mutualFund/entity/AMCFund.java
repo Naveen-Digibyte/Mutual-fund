@@ -3,10 +3,12 @@ package com.digibyte.midfin_wealth.mutualFund.entity;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDate;
+import java.util.List;
 
 @Entity
 @Getter
@@ -45,9 +47,6 @@ public class AMCFund {
     @Column(name = "mf_003_fundPayout")
     private String isinDivPayout;
 
-    @Column(name = "mf_003_fundGrowth")
-    private String isinGrowth;
-
     @Column(name = "mf_003_fundReinvestment")
     private String isinDivReInvestment;
 
@@ -65,5 +64,8 @@ public class AMCFund {
     @JoinColumn(name = "mf_003_schemeTYpe", referencedColumnName = "mf_004_id")
     @JsonBackReference
     private SchemeType schemeType;
-            
+
+    @OneToMany(mappedBy = "amcFund", cascade = CascadeType.ALL)
+    @JsonManagedReference
+    private List<NavData> navDatas;
 }

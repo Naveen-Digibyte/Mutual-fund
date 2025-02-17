@@ -23,7 +23,13 @@ spring:
 
 server:
   port: 8080
-  
 
 amfiAPI:
   schemeData: https://portal.amfiindia.com/DownloadSchemeData_Po.aspx?mf=0
+  dailyNavData: https://portal.amfiindia.com/DownloadNAVHistoryReport_Po.aspx?frmdt=
+  
+minio:
+  endPoint: https://minio.strydehr.com
+  accessKey: byKtaDUmA9jPdFh0qBqK
+  secretKey: 6ZbeFsL2QA4D4Dkl2bMGD6uWvqNZPjaWIq8re92u
+  bucketName: mutual-fund

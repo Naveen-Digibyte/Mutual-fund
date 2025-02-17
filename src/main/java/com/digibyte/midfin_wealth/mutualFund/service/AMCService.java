@@ -11,6 +11,9 @@ import com.digibyte.midfin_wealth.mutualFund.repository.AMCFundsRepository;
 import com.digibyte.midfin_wealth.mutualFund.repository.AMCRepository;
 import com.digibyte.midfin_wealth.mutualFund.repository.SchemeCategoryRepository;
 import com.digibyte.midfin_wealth.mutualFund.repository.SchemeTypeRepository;
+import io.minio.*;
+import io.minio.errors.*;
+import io.minio.http.Method;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
@@ -19,10 +22,16 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.io.StringReader;
-import java.util.List;
-import java.util.Optional;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
+import java.security.NoSuchAlgorithmException;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
@@ -33,9 +42,13 @@ public class AMCService {
     private final SchemeCategoryRepository schemeRepository;
     private final AMCFundsRepository amcFundsRepository;
     private final SchemeTypeRepository schemeTypeRepository;
+    private final MinioClient minioClient;
 
     @Value("${amfiAPI.schemeData}")
     private String SchemeDataUrl;
+
+    @Value("minio.bucketName")
+    private String bucketName;
 
 
     public String getAmcDetails() {
@@ -74,7 +87,7 @@ public class AMCService {
     }
 
     private AssetManagementCompany getOrCreateAMC(String amcName) {
-        return amcRepository.findByName(amcName).orElseGet(() -> amcRepository.save(AssetManagementCompany.builder().name(amcName).build()));
+        return amcRepository.findByName(amcName).orElseGet(() -> amcRepository.save(AssetManagementCompany.builder().name(amcName).status(true).build()));
     }
 
     private SchemeCategory getOrCreateSchemeCategory(String category) {
@@ -91,25 +104,24 @@ public class AMCService {
         }
         String[] val = isin.split("IN");
         String payout = val.length > 1 ? "IN" + val[1] : null;
-        String growth = val.length > 2 ? "IN" + val[2] : null;
-        String reinvestment = val.length > 3 ? "IN" + val[3] : null;
-        return new String[]{payout, growth, reinvestment};
+        String reinvestment = val.length > 2 ? "IN" + val[2] : null;
+        return new String[]{payout, reinvestment};
     }
 
     private void createOrUpdateFund(CSVRecord record, AssetManagementCompany amc, SchemeCategory schemeCategory, SchemeType schemeType, String[] isinParts) {
         Optional<AMCFund> fundExists = amcFundsRepository.findByCode(record.get("Code"));
-        fundExists.orElseGet(() -> amcFundsRepository.save(AMCFund.builder().assetManagementCompany(amc).schemeCategory(schemeCategory).schemeType(schemeType).fundName(record.get("Scheme Name")).fundNavName(record.get("Scheme NAV Name")).code(record.get("Code")).minimumAmount(record.get("Scheme Minimum Amount")).launchDate(record.get("Launch Date")).closureDate(record.get("Closure Date")).isinGrowth(isinParts[1]).isinDivPayout(isinParts[0]).isinDivReInvestment(isinParts[2]).build()));
+        fundExists.orElseGet(() -> amcFundsRepository.save(AMCFund.builder().assetManagementCompany(amc).schemeCategory(schemeCategory).schemeType(schemeType).fundName(record.get("Scheme Name")).fundNavName(record.get("Scheme NAV Name")).code(record.get("Code")).minimumAmount(record.get("Scheme Minimum Amount")).launchDate(record.get("Launch Date")).closureDate(record.get(" Closure Date")).isinDivPayout(isinParts[0]).isinDivReInvestment(isinParts[1]).build()));
     }
 
-    public List<AssetManagementCompany> getAllAMCs(){
+    public List<AssetManagementCompany> getAllAMCs() {
         return amcRepository.findAll();
     }
 
-    public List<SchemeCategory> getALlSchemeCategories(){
+    public List<SchemeCategory> getALlSchemeCategories() {
         return schemeRepository.findAll();
     }
 
-    public List<SchemeType> getAllSchemeTypes(){
+    public List<SchemeType> getAllSchemeTypes() {
         return schemeTypeRepository.findAll();
     }
 
@@ -140,7 +152,7 @@ public class AMCService {
         AssetManagementCompany assetManagementCompany = amcRepository.findById(amcId)
                 .orElseThrow(() -> new IllegalArgumentException(String.format(ErrorConstants.E_004)));
         SchemeCategory schemeCategory = schemeRepository.findById(schemeCategoryId)
-                .orElseThrow(()-> new IllegalArgumentException(String.format(ErrorConstants.E_013)));
+                .orElseThrow(() -> new IllegalArgumentException(String.format(ErrorConstants.E_013)));
         List<AMCFund> funds = amcFundsRepository.findByAssetManagementCompanyAndSchemeCategory(assetManagementCompany, schemeCategory);
 
         if (funds.isEmpty()) {
@@ -195,14 +207,7 @@ public class AMCService {
         return funds;
     }
 
-    public List<AMCFund> getFundsByAssetManagementCompanyIdAndIsinGrowth(long amcId, String isinGrowth) {
-        AssetManagementCompany assetManagementCompany = amcRepository.findById(amcId)
-                .orElseThrow(() -> new IllegalArgumentException(String.format(ErrorConstants.E_004)));
-        List<AMCFund> funds = amcFundsRepository.findByAssetManagementCompanyAndIsinGrowth(assetManagementCompany, isinGrowth);
-
-        if (funds.isEmpty()) {
-            throw new IllegalStateException(String.format(ErrorConstants.E_012, isinGrowth, amcId));
-        }
-        return funds;
+    public List<AMCFund> getFundsWithNoClosureDate() {
+        return amcFundsRepository.findFundsWithLatestNavData();
     }
 }

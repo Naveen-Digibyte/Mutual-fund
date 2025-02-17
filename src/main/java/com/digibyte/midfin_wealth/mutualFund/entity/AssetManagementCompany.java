@@ -32,6 +32,9 @@ public class AssetManagementCompany {
 
     @Column(name = "mf_001_amcStatus")
     private boolean status;
+    
+    @Column(name = "mf_001_fundImage")
+    private String imageUrl;
 
     @OneToMany(mappedBy = "assetManagementCompany", cascade = CascadeType.ALL)
     @JsonManagedReference

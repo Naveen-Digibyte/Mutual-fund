@@ -1,13 +1,18 @@
 package com.digibyte.midfin_wealth.mutualFund.controller;
 
 import com.digibyte.midfin_wealth.mutualFund.constant.Constants;
+import com.digibyte.midfin_wealth.mutualFund.entity.AMCFund;
 import com.digibyte.midfin_wealth.mutualFund.model.ResponseModel;
 import com.digibyte.midfin_wealth.mutualFund.model.SchemeData;
 import com.digibyte.midfin_wealth.mutualFund.service.AMCService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.InputStream;
 import java.util.List;
 
 @RestController
@@ -72,8 +77,8 @@ public class AMCSchemeController {
         return ResponseEntity.ok().body(new ResponseModel(Constants.POSITIVE, null, amcService.getFundsByAssetManagementCompanyIdAndIsinDivPayout(amcId, isinDivPayout)));
     }
 
-    @GetMapping("/funds/{amcId}/isin-growth")
-    public ResponseEntity<ResponseModel> getFundsByAMCIdAndIsinGrowth(@PathVariable long amcId, @RequestParam String isinGrowth) {
-        return ResponseEntity.ok().body(new ResponseModel(Constants.POSITIVE, null, amcService.getFundsByAssetManagementCompanyIdAndIsinGrowth(amcId, isinGrowth)));
+    @GetMapping("/no-closure-date")
+    public List<AMCFund> getFundsWithNoClosureDate() {
+        return amcService.getFundsWithNoClosureDate();
     }
 }
