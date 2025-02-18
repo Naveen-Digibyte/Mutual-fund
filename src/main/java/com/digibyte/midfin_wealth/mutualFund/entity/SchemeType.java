@@ -1,5 +1,6 @@
 package com.digibyte.midfin_wealth.mutualFund.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
@@ -29,6 +30,7 @@ public class SchemeType {
 
     @OneToMany(mappedBy = "schemeType", cascade = CascadeType.ALL)
     @JsonManagedReference
+    @JsonIgnore
     private List<AMCFund> amcFundList;
     
 }

@@ -32,10 +32,4 @@ public class NavData {
     
     @Column(name = "mf_005_navValue")
     private float value;
-
-    @Column(name = "mf_005_repurchasePrice")
-    private String repurchasePrice;
-
-    @Column(name = "mf_005_salePrice")
-    private String salePrice;
 }

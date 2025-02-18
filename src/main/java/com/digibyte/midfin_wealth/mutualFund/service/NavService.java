@@ -1,13 +1,22 @@
 package com.digibyte.midfin_wealth.mutualFund.service;
 
 import com.digibyte.midfin_wealth.mutualFund.constant.LoggerConstants;
+import com.digibyte.midfin_wealth.mutualFund.entity.AMCFund;
+import com.digibyte.midfin_wealth.mutualFund.entity.AssetManagementCompany;
 import com.digibyte.midfin_wealth.mutualFund.entity.NavData;
+import com.digibyte.midfin_wealth.mutualFund.enums.Status;
 import com.digibyte.midfin_wealth.mutualFund.repository.AMCFundsRepository;
+import com.digibyte.midfin_wealth.mutualFund.repository.AMCRepository;
 import com.digibyte.midfin_wealth.mutualFund.repository.NavRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVRecord;
+import org.apache.poi.hssf.usermodel.HSSFWorkbook;
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -15,11 +24,14 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.io.StringReader;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -29,6 +41,7 @@ public class NavService {
     private final NavRepository navRepository;
     private final RestTemplate restTemplate;
     private final AMCFundsRepository amcFundsRepository;
+    private final AMCRepository amcRepository;
 
     @Value("${amfiAPI.dailyNavData}")
     private String dailyNavUrl;
@@ -36,7 +49,7 @@ public class NavService {
     public void fetchAndSaveDataFromApi() throws Exception {
         logger.info(LoggerConstants.FETCH_DATA_START);
 
-        String apiUrl = dailyNavUrl + LocalDate.now().minusDays(3).format(DateTimeFormatter.ofPattern("dd-MMM-yyyy"));
+        String apiUrl = dailyNavUrl + LocalDate.now().minusDays(1).format(DateTimeFormatter.ofPattern("dd-MMM-yyyy"));
         logger.debug(LoggerConstants.API_URL_GENERATED, apiUrl);
 
         try {
@@ -81,12 +94,18 @@ public class NavService {
 
             for (CSVRecord record : records) {
                 try {
+                    Optional<AMCFund> fundExist = amcFundsRepository.findByCode(record.get(0));
+                    if(fundExist.isEmpty()){
+                        throw new EntityNotFoundException("AMC Fund not found: " + record.get(0));
+                    }
+                    Optional<AssetManagementCompany>assetManagementCompany = amcRepository.findAssetManagementCompanyByAmcFundId(fundExist.get().getId());
+                    assetManagementCompany.get().setStatus(Status.ACTIVE);
+                    amcRepository.save(assetManagementCompany.get());
+                    fundExist.get().setStatus(Status.ACTIVE);
+                    amcFundsRepository.save(fundExist.get());
                     NavData navData = NavData.builder()
-                            .amcFund(amcFundsRepository.findByCode(record.get(0))
-                                    .orElseThrow(() -> new EntityNotFoundException("AMC Fund not found: " + record.get(0))))
+                            .amcFund(fundExist.get())
                             .value(parseValue(record.get(4)))
-                            .repurchasePrice(record.get(5))
-                            .salePrice(record.get(6))
                             .date(record.get(7))
                             .build();
                     schemes.add(navData);
@@ -114,6 +133,33 @@ public class NavService {
         } catch (NumberFormatException e) {
             logger.error(LoggerConstants.INVALID_NUMBER_FORMAT, value, e);
             throw new RuntimeException("Invalid value format: " + value, e);
+        }
+    }
+
+    public void readExcelFile(InputStream inputStream) {
+        try (Workbook workbook = new HSSFWorkbook(inputStream)) {  
+            Sheet sheet = workbook.getSheetAt(0); 
+
+            for (Row row : sheet) {
+                for (Cell cell : row) {
+                    switch (cell.getCellType()) {
+                        case STRING:
+                            System.out.print(cell.getStringCellValue() + "\t");
+                            break;
+                        case NUMERIC:
+                            System.out.print(cell.getNumericCellValue() + "\t");
+                            break;
+                        case BOOLEAN:
+                            System.out.print(cell.getBooleanCellValue() + "\t");
+                            break;
+                        default:
+                            break;
+                    }
+                }
+                System.out.println();
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 }

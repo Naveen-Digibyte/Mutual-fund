@@ -6,31 +6,28 @@ import com.digibyte.midfin_wealth.mutualFund.entity.AMCFund;
 import com.digibyte.midfin_wealth.mutualFund.entity.AssetManagementCompany;
 import com.digibyte.midfin_wealth.mutualFund.entity.SchemeCategory;
 import com.digibyte.midfin_wealth.mutualFund.entity.SchemeType;
+import com.digibyte.midfin_wealth.mutualFund.enums.Status;
 import com.digibyte.midfin_wealth.mutualFund.expection.FundException;
 import com.digibyte.midfin_wealth.mutualFund.repository.AMCFundsRepository;
 import com.digibyte.midfin_wealth.mutualFund.repository.AMCRepository;
 import com.digibyte.midfin_wealth.mutualFund.repository.SchemeCategoryRepository;
 import com.digibyte.midfin_wealth.mutualFund.repository.SchemeTypeRepository;
 import io.minio.*;
-import io.minio.errors.*;
-import io.minio.http.Method;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
-import org.springframework.web.multipart.MaxUploadSizeExceededException;
-import org.springframework.web.multipart.MultipartFile;
-
-import java.io.IOException;
-import java.io.InputStream;
 import java.io.StringReader;
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
-import java.security.NoSuchAlgorithmException;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 @Service
@@ -87,7 +84,7 @@ public class AMCService {
     }
 
     private AssetManagementCompany getOrCreateAMC(String amcName) {
-        return amcRepository.findByName(amcName).orElseGet(() -> amcRepository.save(AssetManagementCompany.builder().name(amcName).status(true).build()));
+        return amcRepository.findByName(amcName).orElseGet(() -> amcRepository.save(AssetManagementCompany.builder().name(amcName).status(Status.INACTIVE).build()));
     }
 
     private SchemeCategory getOrCreateSchemeCategory(String category) {
@@ -110,7 +107,7 @@ public class AMCService {
 
     private void createOrUpdateFund(CSVRecord record, AssetManagementCompany amc, SchemeCategory schemeCategory, SchemeType schemeType, String[] isinParts) {
         Optional<AMCFund> fundExists = amcFundsRepository.findByCode(record.get("Code"));
-        fundExists.orElseGet(() -> amcFundsRepository.save(AMCFund.builder().assetManagementCompany(amc).schemeCategory(schemeCategory).schemeType(schemeType).fundName(record.get("Scheme Name")).fundNavName(record.get("Scheme NAV Name")).code(record.get("Code")).minimumAmount(record.get("Scheme Minimum Amount")).launchDate(record.get("Launch Date")).closureDate(record.get(" Closure Date")).isinDivPayout(isinParts[0]).isinDivReInvestment(isinParts[1]).build()));
+        fundExists.orElseGet(() -> amcFundsRepository.save(AMCFund.builder().assetManagementCompany(amc).schemeCategory(schemeCategory).schemeType(schemeType).fundName(record.get("Scheme Name")).fundNavName(record.get("Scheme NAV Name")).code(record.get("Code")).minimumAmount(record.get("Scheme Minimum Amount")).launchDate(LocalDate.parse(record.get("Launch Date"), DateTimeFormatter.ofPattern("dd-MMM-yy"))).closureDate(LocalDate.parse(record.get(" Closure Date"), DateTimeFormatter.ofPattern("dd-MMM-yy"))).isinDivPayout(isinParts[0]).isinDivReInvestment(isinParts[1]).status(Status.INACTIVE).build()));
     }
 
     public List<AssetManagementCompany> getAllAMCs() {
@@ -188,7 +185,7 @@ public class AMCService {
     public List<AMCFund> getFundsByAssetManagementCompanyIdAndLaunchDate(long amcId, String launchDate) {
         AssetManagementCompany assetManagementCompany = amcRepository.findById(amcId)
                 .orElseThrow(() -> new IllegalArgumentException(String.format(ErrorConstants.E_004)));
-        List<AMCFund> funds = amcFundsRepository.findByAssetManagementCompanyAndLaunchDate(assetManagementCompany, launchDate);
+        List<AMCFund> funds = amcFundsRepository.findByAssetManagementCompanyAndLaunchDate(assetManagementCompany, LocalDate.parse(launchDate));
 
         if (funds.isEmpty()) {
             throw new IllegalStateException(String.format(ErrorConstants.E_010, launchDate, amcId));
@@ -207,7 +204,36 @@ public class AMCService {
         return funds;
     }
 
-    public List<AMCFund> getFundsWithNoClosureDate() {
-        return amcFundsRepository.findFundsWithLatestNavData();
+    public List<AMCFund> getAllFundsWithNoClosureDate() {
+        return amcFundsRepository.findByClosureDateNull();
+    }
+    
+    public Page<AMCFund> getFundsByPage(int pageNumber, int pageSize){
+        Pageable pageable = PageRequest.of(pageNumber, pageSize, Sort.by("code").ascending());
+        Page<AMCFund> pageResult = amcFundsRepository.findByClosureDateNull(pageable);
+        return pageResult;
+    }
+
+    public AssetManagementCompany createAMC(AssetManagementCompany assetManagementCompany) {
+        return amcRepository.save(assetManagementCompany);
+    }
+
+    public AssetManagementCompany updateAMC(long id, AssetManagementCompany updatedAMC) {
+        Optional<AssetManagementCompany> existingAMC = amcRepository.findById(id);
+        if (existingAMC.isPresent()) {
+            AssetManagementCompany amc = existingAMC.get();
+            amc.setName(updatedAMC.getName());
+            amc.setValue(updatedAMC.getValue());
+            amc.setStatus(updatedAMC.getStatus());
+            amc.setAmcFunds(updatedAMC.getAmcFunds());
+            amc.setAmcDetails(updatedAMC.getAmcDetails());
+            return amcRepository.save(amc);
+        }
+        return null;
+    }
+
+    public void deleteAMC(long id) {
+        Optional<AssetManagementCompany> existingAMC = amcRepository.findById(id);
+        existingAMC.ifPresent(amcRepository::delete);
     }
 }

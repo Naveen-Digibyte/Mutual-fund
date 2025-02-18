@@ -2,17 +2,15 @@ package com.digibyte.midfin_wealth.mutualFund.controller;
 
 import com.digibyte.midfin_wealth.mutualFund.constant.Constants;
 import com.digibyte.midfin_wealth.mutualFund.entity.AMCFund;
+import com.digibyte.midfin_wealth.mutualFund.entity.AssetManagementCompany;
 import com.digibyte.midfin_wealth.mutualFund.model.ResponseModel;
-import com.digibyte.midfin_wealth.mutualFund.model.SchemeData;
 import com.digibyte.midfin_wealth.mutualFund.service.AMCService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
 
-import java.io.InputStream;
 import java.util.List;
 
 @RestController
@@ -78,7 +76,32 @@ public class AMCSchemeController {
     }
 
     @GetMapping("/no-closure-date")
-    public List<AMCFund> getFundsWithNoClosureDate() {
-        return amcService.getFundsWithNoClosureDate();
+    public ResponseEntity<ResponseModel> getFundsWithNoClosureDate() {
+        return ResponseEntity.ok().body(new ResponseModel(Constants.POSITIVE, null, amcService.getAllFundsWithNoClosureDate()));
+
     }
+
+    @GetMapping("/pages")
+    public ResponseEntity<ResponseModel> getFundsByPage(@RequestParam int pageNumber, @RequestParam int pageSize) {
+        return ResponseEntity.ok().body(new ResponseModel(Constants.POSITIVE, null, amcService.getFundsByPage(pageNumber, pageSize)));
+    }
+
+    @PostMapping
+    public ResponseEntity<AssetManagementCompany> createAMC(@RequestBody AssetManagementCompany assetManagementCompany) {
+        AssetManagementCompany createdAMC = amcService.createAMC(assetManagementCompany);
+        return new ResponseEntity<>(createdAMC, HttpStatus.CREATED);
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<AssetManagementCompany> updateAMC(@PathVariable long id, @RequestBody AssetManagementCompany updatedAMC) {
+        AssetManagementCompany amc = amcService.updateAMC(id, updatedAMC);
+        return (amc != null) ? new ResponseEntity<>(amc, HttpStatus.OK) : new ResponseEntity<>(HttpStatus.NOT_FOUND);
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteAMC(@PathVariable long id) {
+        amcService.deleteAMC(id);
+        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+    }
+
 }

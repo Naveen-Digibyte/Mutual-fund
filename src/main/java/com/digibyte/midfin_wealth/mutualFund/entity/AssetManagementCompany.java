@@ -1,5 +1,7 @@
 package com.digibyte.midfin_wealth.mutualFund.entity;
 
+import com.digibyte.midfin_wealth.mutualFund.enums.Status;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
@@ -31,12 +33,15 @@ public class AssetManagementCompany {
     private int value;
 
     @Column(name = "mf_001_amcStatus")
-    private boolean status;
-    
-    @Column(name = "mf_001_fundImage")
-    private String imageUrl;
+    @Enumerated(EnumType.STRING)
+    private Status status;
 
     @OneToMany(mappedBy = "assetManagementCompany", cascade = CascadeType.ALL)
     @JsonManagedReference
+    @JsonIgnore
     private List<AMCFund> amcFunds;
+
+    @OneToOne(cascade = CascadeType.ALL)
+    @JoinColumn(name = "mf_001_details", referencedColumnName = "mf_006_amcDetailId")
+    private AMCDetails amcDetails;
 }

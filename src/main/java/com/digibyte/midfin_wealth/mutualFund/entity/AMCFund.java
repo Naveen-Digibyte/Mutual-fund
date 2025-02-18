@@ -1,6 +1,7 @@
 package com.digibyte.midfin_wealth.mutualFund.entity;
 
 
+import com.digibyte.midfin_wealth.mutualFund.enums.Status;
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
@@ -39,10 +40,10 @@ public class AMCFund {
     private String minimumAmount;
 
     @Column(name = "mf_003_fundLaunchDate")
-    private String launchDate;
+    private LocalDate launchDate;
 
     @Column(name = "mf_003_fundClosureDate")
-    private String closureDate;
+    private LocalDate closureDate;
 
     @Column(name = "mf_003_fundPayout")
     private String isinDivPayout;
@@ -50,6 +51,10 @@ public class AMCFund {
     @Column(name = "mf_003_fundReinvestment")
     private String isinDivReInvestment;
 
+    @Column(name = "mf_003_fundStaus")
+    @Enumerated(EnumType.STRING)
+    private Status status;
+    
     @ManyToOne
     @JoinColumn(name = "mf_003_assetManagementCompany", referencedColumnName = "mf_001_amcId")
     @JsonBackReference
