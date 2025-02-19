@@ -9,6 +9,14 @@ import org.springframework.web.bind.annotation.*;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 
+/**
+ * @author NaveenDhanasekaran
+ *
+ * History:
+ * -19-02-2025 <NaveenDhanasekaran> NavDataController
+ *      - InitialVersion
+ */
+
 @RestController
 @RequestMapping("/api/nav")
 @RequiredArgsConstructor
@@ -24,13 +32,12 @@ public class NavDataController {
     @PostMapping("/fund/{schemeCode}")
     public ResponseEntity<ResponseModel> getNavForScheme(
             @PathVariable(name = "schemeCode") String schemeCode,
-            @RequestParam(name = "amcId") String amcId,
             @RequestParam(name = "fromDate") String fromDateStr,
             @RequestParam(name = "toDate") String toDateStr) {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MMM-yyyy");
         LocalDate fromDate = LocalDate.parse(fromDateStr, formatter);
         LocalDate toDate = LocalDate.parse(toDateStr, formatter);
-        return ResponseEntity.ok().body(new ResponseModel(Constants.POSITIVE, navService.getSaveNav(schemeCode, amcId, fromDate, toDate), null));
+        return ResponseEntity.ok().body(new ResponseModel(Constants.POSITIVE, navService.getSaveNav(schemeCode, fromDate, toDate), null));
     }
 
     @GetMapping("/fund/{fundId}")

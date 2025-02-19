@@ -4,6 +4,14 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+/**
+ * @author NaveenDhanasekaran
+ *
+ * History:
+ * -19-02-2025 <NaveenDhanasekaran> SchemeData
+ *      - InitialVersion
+ */
+
 @Data
 @AllArgsConstructor
 @NoArgsConstructor

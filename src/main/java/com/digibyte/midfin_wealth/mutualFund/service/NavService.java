@@ -41,6 +41,14 @@ import java.util.Locale;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+/**
+ * @author NaveenDhanasekaran
+ *
+ * History:
+ * -19-02-2025 <NaveenDhanasekaran> NavService
+ *      - InitialVersion
+ */
+
 @Service
 @RequiredArgsConstructor
 public class NavService {
@@ -53,7 +61,7 @@ public class NavService {
     @Value("${amfiAPI.dailyNavData}")
     private String dailyNavUrl;
     
-    @Value("${amfi.navHistoryData}")
+    @Value("${amfiAPI.navHistoryData}")
     private String API_URL;
     
     public void fetchAndSaveDataFromApi() throws Exception {
@@ -151,7 +159,7 @@ public class NavService {
         }
     }
     
-    public String getSaveNav(String schemeCode, String amcId, LocalDate fromDate, LocalDate toDate) {
+    public String getSaveNav(String schemeCode, LocalDate fromDate, LocalDate toDate) {
         Optional<AMCFund> fundExist = amcFundsRepository.findByCode(schemeCode);
 
         if (fundExist.isPresent()) {
@@ -160,7 +168,7 @@ public class NavService {
             fund.getAssetManagementCompany().setStatus(Status.ACTIVE);
             amcFundsRepository.save(fund);
 
-            String html = fetchNavHistory(amcId, schemeCode, fromDate, toDate);
+            String html = fetchNavHistory(String.valueOf(fund.getAssetManagementCompany().getAmfiId()), schemeCode, fromDate, toDate);
 
             List<NavData> navList = extractNavData(html, fund);
             navRepository.saveAll(navList);
@@ -222,12 +230,20 @@ public class NavService {
     public NavResponseModel getNavByFundCode(long fundId){
         Optional<AMCFund> fundExist = amcFundsRepository.findById(fundId);
         if(fundExist.isPresent()){
+            List<NavData> navData = navRepository.findByAmcFund_Id(fundId);
+            if (navData.isEmpty()){
+                String schemeCode = fundExist.get().getCode();
+                LocalDate fromDate = LocalDate.now();
+                LocalDate toDate = fromDate.minusYears(5).plusDays(5);
+                getSaveNav(schemeCode,fromDate,toDate);
+                navData = navRepository.findByAmcFund_Id(fundId);
+            }
             return NavResponseModel.builder()
                     .amcName(fundExist.get().getAssetManagementCompany().getName())
                     .SchemeNavName(fundExist.get().getFundNavName())
                     .schemeCode(fundExist.get().getCode())
                     .SchemeName(fundExist.get().getFundName())
-                    .data(navRepository.findByAmcFund_Id(fundId))
+                    .data(navData)
                     .build();
         }
         throw new FundException(ErrorConstants.E_015);

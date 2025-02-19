@@ -15,6 +15,14 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * @author NaveenDhanasekaran
+ *
+ * History:
+ * -19-02-2025 <NaveenDhanasekaran> AMCFundsRepository
+ *      - InitialVersion
+ */
+
 @Repository
 public interface AMCFundsRepository extends JpaRepository<AMCFund, Long> {
 

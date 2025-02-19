@@ -11,6 +11,14 @@ import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
 
+/**
+ * @author NaveenDhanasekaran
+ *
+ * History:
+ * -19-02-2025 <NaveenDhanasekaran> NavData
+ *      - InitialVersion
+ */
+
 @Entity
 @Data
 @Builder

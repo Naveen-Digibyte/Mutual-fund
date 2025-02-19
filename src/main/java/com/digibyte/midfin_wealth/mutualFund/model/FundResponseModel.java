@@ -6,6 +6,14 @@ import lombok.Data;
 
 import java.time.LocalDate;
 
+/**
+ * @author NaveenDhanasekaran
+ *
+ * History:
+ * -19-02-2025 <NaveenDhanasekaran> FundResponseModel
+ *      - InitialVersion
+ */
+
 @Data
 @Builder
 public class FundResponseModel {

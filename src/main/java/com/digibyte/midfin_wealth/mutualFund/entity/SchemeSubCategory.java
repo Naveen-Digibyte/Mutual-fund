@@ -11,6 +11,14 @@ import lombok.NoArgsConstructor;
 
 import java.util.List;
 
+/**
+ * @author NaveenDhanasekaran
+ *
+ * History:
+ * -19-02-2025 <NaveenDhanasekaran> SchemeSubCategory
+ *      - InitialVersion
+ */
+
 @Entity
 @Data
 @Builder

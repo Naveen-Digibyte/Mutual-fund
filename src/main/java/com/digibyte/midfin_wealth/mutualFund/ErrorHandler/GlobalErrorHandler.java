@@ -1,4 +1,4 @@
-package com.digibyte.midfin_wealth.mutualFund.ErrorHandler;
+package com.digibyte.midfin_wealth.mutualFund.errorHandler;
 
 import com.digibyte.midfin_wealth.mutualFund.constant.Constants;
 import com.digibyte.midfin_wealth.mutualFund.expection.FundException;
@@ -7,6 +7,14 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+
+/**
+ * @author NaveenDhanasekaran
+ *
+ * History:
+ * -19-02-2025 <NaveenDhanasekaran> GlobalErrorHandler
+ *      - InitialVersion
+ */
 
 @RestControllerAdvice
 public class GlobalErrorHandler {

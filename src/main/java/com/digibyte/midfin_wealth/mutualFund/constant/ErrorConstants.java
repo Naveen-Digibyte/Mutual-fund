@@ -1,5 +1,13 @@
 package com.digibyte.midfin_wealth.mutualFund.constant;
 
+/**
+ * @author NaveenDhanasekaran
+ *
+ * History:
+ * -19-02-2025 <NaveenDhanasekaran> ErrorConstants
+ *      - InitialVersion
+ */
+
 public class ErrorConstants {
 
     public static final String E_001 = "E_001: Failed to fetch data from API. Status Code: %s";
@@ -20,5 +28,12 @@ public class ErrorConstants {
     public static final String E_016 = "E_016: Invalid value format: ";
     public static final String E_017 = "E_017: Scheme code %s does not exist.";
     public static final String E_018 = "E_018: Fund with name %s already exist.";
+    public static final String E_019 = "E_019: SchemeType with id %d not found.";
+    public static final String E_020 = "E_020: Error occurred while creating SchemeType.";
+    public static final String E_021 = "E_021: Error occurred while fetching all SchemeTypes.";
+    public static final String E_022 = "E_022: Error occurred while fetching SchemeType by id %d.";
+    public static final String E_023 = "E_023: Error occurred while updating SchemeType with id %d.";
+    public static final String E_024 = "E_024: Error occurred while deleting SchemeType with id %d.";
+
 
 }

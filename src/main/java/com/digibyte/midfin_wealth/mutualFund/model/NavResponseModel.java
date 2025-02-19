@@ -6,6 +6,14 @@ import lombok.Data;
 
 import java.util.List;
 
+/**
+ * @author NaveenDhanasekaran
+ *
+ * History:
+ * -19-02-2025 <NaveenDhanasekaran> NavResponseModel
+ *      - InitialVersion
+ */
+
 @Data
 @Builder
 public class NavResponseModel {

@@ -12,6 +12,14 @@ import lombok.NoArgsConstructor;
 
 import java.util.List;
 
+/**
+ * @author NaveenDhanasekaran
+ *
+ * History:
+ * -19-02-2025 <NaveenDhanasekaran> AssetManagementCompany
+ *      - InitialVersion
+ */
+
 @Entity
 @Data
 @Builder
@@ -31,7 +39,7 @@ public class AssetManagementCompany {
 
     @Column(name = "mf_001_amcValueNo")
     @JsonIgnore
-    private int value;
+    private int amfiId;
 
     @Column(name = "mf_001_amcStatus")
     @Enumerated(EnumType.STRING)

@@ -4,6 +4,14 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import jakarta.persistence.*;
 import lombok.*;
 
+/**
+ * @author NaveenDhanasekaran
+ *
+ * History:
+ * -19-02-2025 <NaveenDhanasekaran> AMCDetails
+ *      - InitialVersion
+ */
+
 @Entity
 @Getter
 @Setter

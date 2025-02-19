@@ -8,6 +8,14 @@ import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
 
+/**
+ * @author NaveenDhanasekaran
+ *
+ * History:
+ * -19-02-2025 <NaveenDhanasekaran> AMCRepository
+ *      - InitialVersion
+ */
+
 @Repository
 public interface AMCRepository extends JpaRepository<AssetManagementCompany, Long> {
     Optional<AssetManagementCompany> findByName(String name);
