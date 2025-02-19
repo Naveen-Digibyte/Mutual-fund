@@ -4,7 +4,6 @@ import com.digibyte.midfin_wealth.mutualFund.entity.AMCFund;
 import com.digibyte.midfin_wealth.mutualFund.entity.AssetManagementCompany;
 import com.digibyte.midfin_wealth.mutualFund.entity.SchemeCategory;
 import com.digibyte.midfin_wealth.mutualFund.entity.SchemeType;
-import org.springframework.cglib.core.Local;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -19,6 +18,7 @@ import java.util.Optional;
 @Repository
 public interface AMCFundsRepository extends JpaRepository<AMCFund, Long> {
 
+    boolean existsByCode(String code);
     Optional<AMCFund> findByCode(String code);
     @Query("SELECT f FROM AMCFund f JOIN FETCH f.assetManagementCompany WHERE f.assetManagementCompany.id = :amcId")
     List<AMCFund> findFundsByAssetManagementCompanyId(@Param("amcId") long amcId);

@@ -1,39 +1,35 @@
 package com.digibyte.midfin_wealth.mutualFund.entity;
 
-import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDate;
+import java.util.List;
 
 @Entity
 @Data
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-@Table(name="mf_005_t_nav")
+@Table(name="mf_007_t_schemeSubCategory")
 @JsonInclude(value = JsonInclude.Include.NON_NULL)
-public class NavData {
-    
+public class SchemeSubCategory {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "mf_005_navId")
-    @JsonIgnore
+    @Column(name = "mf_007_id")
     private long id;
 
-    @ManyToOne
-    @JoinColumn(name = "mf_005_amcFund", referencedColumnName = "mf_003_fundId")
-    @JsonBackReference
-    private AMCFund amcFund;
+    @Column(name = "mf_007_schemeSubCategory")
+    private String subCategory;
 
-    @Column(name = "mf_005_date")
-    private LocalDate date;
-    
-    @Column(name = "mf_005_navValue")
-    private float value;
+    @OneToMany(mappedBy = "schemeSubCategory", cascade = CascadeType.ALL)
+    @JsonManagedReference
+    @JsonIgnore
+    private List<AMCFund> amcFundList;
 }

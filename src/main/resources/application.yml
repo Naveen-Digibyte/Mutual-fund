@@ -27,6 +27,7 @@ server:
 amfiAPI:
   schemeData: https://portal.amfiindia.com/DownloadSchemeData_Po.aspx?mf=0
   dailyNavData: https://portal.amfiindia.com/DownloadNAVHistoryReport_Po.aspx?frmdt=
+  navHistoryData: https://www.amfiindia.com/modules/NavHistoryPeriod
   
 minio:
   endPoint: https://minio.strydehr.com

@@ -30,6 +30,7 @@ public class AssetManagementCompany {
     private String name;
 
     @Column(name = "mf_001_amcValueNo")
+    @JsonIgnore
     private int value;
 
     @Column(name = "mf_001_amcStatus")

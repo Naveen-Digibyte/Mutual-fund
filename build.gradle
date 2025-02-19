@@ -30,6 +30,7 @@ dependencies {
 	implementation 'io.minio:minio:8.5.17'
 	implementation 'org.apache.poi:poi-ooxml:5.4.0'
 	implementation 'org.apache.poi:poi:5.4.0'
+	implementation 'org.jsoup:jsoup:1.18.3'
 
 	compileOnly 'org.projectlombok:lombok'
 	developmentOnly 'org.springframework.boot:spring-boot-devtools'

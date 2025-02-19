@@ -66,6 +66,11 @@ public class AMCFund {
     private SchemeCategory schemeCategory;
 
     @ManyToOne
+    @JoinColumn(name = "mf_003_schemeSubCategory", referencedColumnName = "mf_007_id")
+    @JsonBackReference
+    private SchemeSubCategory schemeSubCategory;
+
+    @ManyToOne
     @JoinColumn(name = "mf_003_schemeTYpe", referencedColumnName = "mf_004_id")
     @JsonBackReference
     private SchemeType schemeType;

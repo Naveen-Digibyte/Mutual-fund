@@ -1,17 +1,13 @@
 package com.digibyte.midfin_wealth.mutualFund.controller;
 
 import com.digibyte.midfin_wealth.mutualFund.constant.Constants;
-import com.digibyte.midfin_wealth.mutualFund.entity.AMCFund;
 import com.digibyte.midfin_wealth.mutualFund.entity.AssetManagementCompany;
 import com.digibyte.midfin_wealth.mutualFund.model.ResponseModel;
 import com.digibyte.midfin_wealth.mutualFund.service.AMCService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/mutual-funds")

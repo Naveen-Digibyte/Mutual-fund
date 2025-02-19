@@ -2,16 +2,10 @@ package com.digibyte.midfin_wealth.mutualFund.service;
 
 import com.digibyte.midfin_wealth.mutualFund.constant.Constants;
 import com.digibyte.midfin_wealth.mutualFund.constant.ErrorConstants;
-import com.digibyte.midfin_wealth.mutualFund.entity.AMCFund;
-import com.digibyte.midfin_wealth.mutualFund.entity.AssetManagementCompany;
-import com.digibyte.midfin_wealth.mutualFund.entity.SchemeCategory;
-import com.digibyte.midfin_wealth.mutualFund.entity.SchemeType;
+import com.digibyte.midfin_wealth.mutualFund.entity.*;
 import com.digibyte.midfin_wealth.mutualFund.enums.Status;
 import com.digibyte.midfin_wealth.mutualFund.expection.FundException;
-import com.digibyte.midfin_wealth.mutualFund.repository.AMCFundsRepository;
-import com.digibyte.midfin_wealth.mutualFund.repository.AMCRepository;
-import com.digibyte.midfin_wealth.mutualFund.repository.SchemeCategoryRepository;
-import com.digibyte.midfin_wealth.mutualFund.repository.SchemeTypeRepository;
+import com.digibyte.midfin_wealth.mutualFund.repository.*;
 import io.minio.*;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.csv.CSVFormat;
@@ -25,6 +19,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
+
 import java.io.StringReader;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -39,6 +34,7 @@ public class AMCService {
     private final SchemeCategoryRepository schemeRepository;
     private final AMCFundsRepository amcFundsRepository;
     private final SchemeTypeRepository schemeTypeRepository;
+    private final SubCategoryRepository subCategoryRepository;
     private final MinioClient minioClient;
 
     @Value("${amfiAPI.schemeData}")
@@ -70,17 +66,25 @@ public class AMCService {
                 processRecord(record);
             }
         } catch (Exception e) {
-            throw new FundException(ErrorConstants.E_003);
+            throw new FundException(e.getMessage());
         }
     }
 
     private void processRecord(CSVRecord record) {
         AssetManagementCompany amc = getOrCreateAMC(record.get("AMC"));
-        SchemeCategory schemeCategory = getOrCreateSchemeCategory(record.get("Scheme Category"));
+        String schemeCategory = null;
+        String schemeSubCategory = null;
+        if (record.get("Scheme Category").contains("-")) {
+            schemeCategory = record.get("Scheme Category").split("-")[0].trim();
+            schemeSubCategory = record.get("Scheme Category").split("-")[1].trim();
+        } else {
+            schemeSubCategory = record.get("Scheme Category").trim();
+        }
+
         SchemeType schemeType = getOrCreateSchemeType(record.get("Scheme Type"));
         String isin = record.get("ISIN Div Payout/ ISIN GrowthISIN Div Reinvestment");
         String[] isinParts = parseIsin(isin);
-        createOrUpdateFund(record, amc, schemeCategory, schemeType, isinParts);
+        createOrUpdateFund(record, amc, getOrCreateSchemeCategory(schemeCategory), schemeType, isinParts, getOrCreateSchemeSubCategory(schemeSubCategory));
     }
 
     private AssetManagementCompany getOrCreateAMC(String amcName) {
@@ -95,6 +99,17 @@ public class AMCService {
         return schemeTypeRepository.findByType(type).orElseGet(() -> schemeTypeRepository.save(SchemeType.builder().type(type).build()));
     }
 
+    private SchemeSubCategory getOrCreateSchemeSubCategory(String subCategory) {
+        return subCategoryRepository.findBySubCategory(subCategory).orElseGet(() -> subCategoryRepository.save(SchemeSubCategory.builder().subCategory(subCategory).build()));
+    }
+    
+    private LocalDate getLaunchDate(String date){
+        if(date.isEmpty()){
+            return null;
+        }
+        return LocalDate.parse(date, DateTimeFormatter.ofPattern(date.length() == 9 ? "dd-MMM-yy" : "dd-MMM-yyyy", Locale.ENGLISH));
+    }
+
     private String[] parseIsin(String isin) {
         if (isin == null || isin.isBlank()) {
             return new String[]{null, null, null};
@@ -105,9 +120,23 @@ public class AMCService {
         return new String[]{payout, reinvestment};
     }
 
-    private void createOrUpdateFund(CSVRecord record, AssetManagementCompany amc, SchemeCategory schemeCategory, SchemeType schemeType, String[] isinParts) {
-        Optional<AMCFund> fundExists = amcFundsRepository.findByCode(record.get("Code"));
-        fundExists.orElseGet(() -> amcFundsRepository.save(AMCFund.builder().assetManagementCompany(amc).schemeCategory(schemeCategory).schemeType(schemeType).fundName(record.get("Scheme Name")).fundNavName(record.get("Scheme NAV Name")).code(record.get("Code")).minimumAmount(record.get("Scheme Minimum Amount")).launchDate(LocalDate.parse(record.get("Launch Date"), DateTimeFormatter.ofPattern("dd-MMM-yy"))).closureDate(LocalDate.parse(record.get(" Closure Date"), DateTimeFormatter.ofPattern("dd-MMM-yy"))).isinDivPayout(isinParts[0]).isinDivReInvestment(isinParts[1]).status(Status.INACTIVE).build()));
+    private void createOrUpdateFund(CSVRecord record, AssetManagementCompany amc, SchemeCategory schemeCategory, SchemeType schemeType, String[] isinParts, SchemeSubCategory schemeSubCategory) {
+       if(!amcFundsRepository.existsByCode(record.get("Code"))){
+        amcFundsRepository.save(AMCFund.builder()
+                .assetManagementCompany(amc)
+                .schemeCategory(schemeCategory)
+                .schemeType(schemeType)
+                .fundName(record.get("Scheme Name"))
+                .fundNavName(record.get("Scheme NAV Name"))
+                .code(record.get("Code"))
+                .minimumAmount(record.get("Scheme Minimum Amount"))
+                .launchDate(getLaunchDate(record.get("Launch Date").trim()))
+                .closureDate(getLaunchDate(record.get(" Closure Date").trim()))
+                .isinDivPayout(isinParts[0])
+                .isinDivReInvestment(isinParts[1])
+                .status(Status.INACTIVE)
+                .build());
+       }
     }
 
     public List<AssetManagementCompany> getAllAMCs() {
@@ -207,8 +236,8 @@ public class AMCService {
     public List<AMCFund> getAllFundsWithNoClosureDate() {
         return amcFundsRepository.findByClosureDateNull();
     }
-    
-    public Page<AMCFund> getFundsByPage(int pageNumber, int pageSize){
+
+    public Page<AMCFund> getFundsByPage(int pageNumber, int pageSize) {
         Pageable pageable = PageRequest.of(pageNumber, pageSize, Sort.by("code").ascending());
         Page<AMCFund> pageResult = amcFundsRepository.findByClosureDateNull(pageable);
         return pageResult;
