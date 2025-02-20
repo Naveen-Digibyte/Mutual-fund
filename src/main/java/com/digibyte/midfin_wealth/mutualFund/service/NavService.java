@@ -216,6 +216,8 @@ public class NavService {
                     navList.add(NavData.builder().amcFund(fund).date(parsedDate).value(Float.parseFloat(navValue)).build());
                 }
             }
+        }else{
+            throw new FundException(doc.select("b").text());
         }
         return navList;
     }
@@ -232,11 +234,12 @@ public class NavService {
         if(fundExist.isPresent()){
             List<NavData> navData = navRepository.findByAmcFund_Id(fundId);
             if (navData.isEmpty()){
-                String schemeCode = fundExist.get().getCode();
-                LocalDate fromDate = LocalDate.now();
-                LocalDate toDate = fromDate.minusYears(5).plusDays(5);
-                getSaveNav(schemeCode,fromDate,toDate);
-                navData = navRepository.findByAmcFund_Id(fundId);
+//                String schemeCode = fundExist.get().getCode();
+//                LocalDate fromDate = LocalDate.now();
+//                LocalDate toDate = fromDate.minusYears(5).plusDays(5);
+//                String response = getSaveNav(schemeCode,fromDate,toDate);
+//                System.out.println(response);
+//                navData = navRepository.findByAmcFund_Id(fundId);
             }
             return NavResponseModel.builder()
                     .amcName(fundExist.get().getAssetManagementCompany().getName())
